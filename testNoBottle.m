@@ -13,38 +13,24 @@ function p =  testNoBottle(im)
 %     Fall 2025
 %
 % copy of the image for my posterization
-posterized = zeros(288, 352, 3, 'uint8');
-for row = 1:288
-    for col = 1:352
-        % Extract the pixel RGB
-        pixel = squeeze(im(row, col, :))';  % 1x3 vector
-        % Find the closest reference color
-        closest = closest_color(pixel);
-        % Place the posterized pixel in the new image
-        posterized(row, col, :) = uint8(closest);
-    end
-end
-imshow(posterized);
-sumBackground = 0;
-sumRed = 0; %so I can weigh it based on the red presence too
-for row = 117:234 %iterate over roughly the middle third
-    for col = 1:352
-        rgbVal = squeeze(posterized(row, col, :))'; 
-        if all(rgbVal == [252 212 176])
-            sumBackground = sumBackground + 1;
-        end
-        if all(rgbVal == [223 51 11])
-            sumRed = sumRed + 1;
-        end
-    end
-end
-sumRed = sumRed * 2;
-sumBackground = sumBackground - sumRed;
+pixel = squeeze(im(260, 240, :))';  % 1x3 vector row/column
+closestOne = closest_color(pixel);
+pixel = squeeze(im(250, 180, :))';
+colorTwo = closest_color(pixel);
+pixel = squeeze(im(260, 215, :))';
+colorThree = closest_color(pixel);
+pickedPixels = [colorOne; ColorTwo; ColorThree];
 disp("Number of background pixels in middle third of image with a weighted number of red pixels subtracted:")
 disp(sumBackground);
-p = sumBackground/(117 * 352);  % replace this line with code to determine "No bottle" probability
-end %after graphing my p values, it looks like my theshold might be somewhere around 0.5
-
+p = 0;
+for i = 1:3
+    if isequal(pickedPixels(i,:), [223 51 11])
+        p = 1;
+    end
+    if isequal(pickedPixels(i,:), [254 221 190])
+        p = 1;
+    end
+end
 %helper function that posterizes a pixel to a color
 function closest = closest_color(color)
     colors = [223 51 11; %picked with impixel using one of the images

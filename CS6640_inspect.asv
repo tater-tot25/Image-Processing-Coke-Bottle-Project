@@ -25,7 +25,7 @@ function [report,defects,thresholds] = CS6640_inspect(d_name)
 %
 
 thresholds = -ones(8,1);
-thresholds(8) = 0.8; %after plotting the p values, there is a huge gap
+thresholds(8) = 0.6;
 
 defect_names(1).defect = 'underfilled';
 defect_names(2).defect = 'overfilled';
@@ -196,8 +196,8 @@ function p =  CS6640_defect_no_bottle(im)
 %     Andrew Tate
 %     UU
 %     Fall 2025
-% NOTE: Still using posterization, but now per pixel, which is wayyy
-% faster than before
+% NOTE: Because I am making a new image each time and applying a
+% posterization effect, this takes a little while to run, like a minute-ish
     totalPixels = 0;
     totalWall = 0;
     for i = 180:200 %x
@@ -211,23 +211,24 @@ function p =  CS6640_defect_no_bottle(im)
         end
     end
     p = totalWall/totalPixels;  
-    %start of convolution 
-    gray = rgb2gray(im);
-    laplacian = [-1 -1 -1; -1 8 -1; -1 -1 -1]; %for edge detection
-    edges = imfilter(gray, laplacian, 'conv');
+    %convolution
+    image = im2double(im);
+    gray = im2gray(image);
+    %Simple edge filter
+    sobel = [-1 -1 -1; -1 8 -1; -1 -1 -1];
+    edges = imfilter(gray, sobel, 'conv');
+    %imshow(edges);
     totalEdge = 0;
     totalPixels = 0;
     for i = 130:230
-        for n = 4:285
+        for n = 4:270
             totalPixels = totalPixels + 1;
-            if edges(i, n) > 100
+            if totalEdge(n, n) > 100
                 totalEdge = totalEdge + 1;
             end
         end
     end
-    p2 = totalEdge/totalPixels;
-    p2 = 1 - p2; %invert to get a p value that reflects no bottle
-    p = (p + p2)/2; %average the two scores
+    p = totalEdge/totalPixels;
 end
 
 % CS6640_closest_color - posterize a color to one of 4 specified colors
